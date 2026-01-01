@@ -1,4 +1,14 @@
 var builder = WebApplication.CreateBuilder(args);
+using KanbanApi.Data;
+using Microsoft.EntityFrameworkCore;
+
+// ... (වෙන කෝඩ්)
+
+// Database එක Register කරනවා (අපි දැනට In-Memory පාවිච්චි කරනවා)
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseInMemoryDatabase("KanbanDb"));
+
+// ... (වෙන කෝඩ්)
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

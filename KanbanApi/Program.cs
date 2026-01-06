@@ -1,23 +1,26 @@
-var builder = WebApplication.CreateBuilder(args);
 using KanbanApi.Data;
 using Microsoft.EntityFrameworkCore;
 
-// ... (වෙන කෝඩ්)
+var builder = WebApplication.CreateBuilder(args);
 
-// Database එක Register කරනවා (අපි දැනට In-Memory පාවිච්චි කරනවා)
+// --- 1. Services Register කරන තැන (කුස්සියට බඩු ගේනවා) ---
+
+// Database එක සම්බන්ධ කරනවා
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseInMemoryDatabase("KanbanDb"));
 
-// ... (වෙන කෝඩ්)
+// Controllers වැඩ කරන්න ඕන කියලා කියනවා (මේක නැති නිසා තමයි කලින් අවුල් ගියේ)
+builder.Services.AddControllers();
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Swagger (Menu Card) එක හදාගන්නවා
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --- 2. App එක Run වෙන විදිය (Restaurant එක වැඩ කරන විදිය) ---
+
+// Development එකේදී විතරක් Swagger පෙන්නන්න
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -26,29 +29,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+// Controllers වලට පාර පෙන්නන්න (Map)
+app.MapControllers();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

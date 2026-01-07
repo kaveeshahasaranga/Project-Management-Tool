@@ -11,5 +11,13 @@ namespace KanbanApi.Data
         // අපේ Models දෙක Database Tables විදියට හඳුන්වා දෙනවා
         public DbSet<KanbanColumn> Columns { get; set; }
         public DbSet<KanbanCard> Cards { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<KanbanColumn>()
+                .HasMany(c => c.Cards)
+                .WithOne()
+                .HasForeignKey(c => c.ColumnId);
+        }
     }
 }

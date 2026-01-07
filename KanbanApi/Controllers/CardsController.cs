@@ -16,50 +16,18 @@ namespace KanbanApi.Controllers
             _context = context;
         }
 
-        // 1. GET: ඔක්කොම කාඩ් ටික බලන්න
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<KanbanCard>>> GetCards()
-        {
-            return await _context.Cards.ToListAsync();
-        }
-
-        // 2. POST: අලුත් කාඩ් එකක් හදන්න
-        // මෙතනදි අපි ColumnId එක අනිවාර්යයෙන් එවන්න ඕන
+        // POST: api/cards (කාඩ් එකක් අලුතින් හදන තැන)
         [HttpPost]
         public async Task<ActionResult<KanbanCard>> CreateCard(KanbanCard card)
         {
-            // මුලින්ම බලනවා එවන ColumnId එක ඇත්තටම තියෙනවද කියලා
-            var column = await _context.Columns.FindAsync(card.ColumnId);
-            if (column == null)
-            {
-                return BadRequest("වැරදි Column ID එකක්! තාත්තා කෙනෙක් නැතුව ළමයි හදන්න බෑ.");
-            }
-
+            // 1. කාඩ් එක Database එකට එකතු කරනවා
             _context.Cards.Add(card);
+            
+            // 2. වෙනස්කම් Save කරනවා
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetCards), new { id = card.Id }, card);
-        }
-
-        // 3. PUT: කාඩ් එකක් වෙනස් කරන්න (Move කරන්න Drag & Drop වලට ඕන වෙන්නේ මේක)
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCard(int id, KanbanCard card)
-        {
-            if (id != card.Id) return BadRequest();
-
-            _context.Entry(card).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Cards.Any(e => e.Id == id)) return NotFound();
-                else throw;
-            }
-
-            return NoContent();
+            // 3. හරි ගියාම Frontend එකට "හරි" කියලා පණිවිඩයක් යවනවා
+            return Ok(card);
         }
     }
 }

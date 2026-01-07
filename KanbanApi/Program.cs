@@ -3,33 +3,58 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. Services Register කරන තැන (කුස්සියට බඩු ගේනවා) ---
+// --- 1. Services Register කරන තැන ---
 
-// Database එක සම්බන්ධ කරනවා
+// Database Setup
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseInMemoryDatabase("KanbanDb"));
 
-// Controllers වැඩ කරන්න ඕන කියලා කියනවා (මේක නැති නිසා තමයි කලින් අවුල් ගියේ)
-builder.Services.AddControllers();
+// CORS: React (Port 5173) ට එන්න අවසර දෙනවා
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173") // ඔයාගේ React Port එක මෙතන තියෙන්න ඕන
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
 
-// Swagger (Menu Card) එක හදාගන්නවා
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// --- 2. App එක Run වෙන විදිය (Restaurant එක වැඩ කරන විදිය) ---
+// --- 2. App එක Run වෙන විදිය ---
 
-// Development එකේදී විතරක් Swagger පෙන්නන්න
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// මේක අනිවාර්යයි! CORS ප්‍රතිපත්තිය ක්‍රියාත්මක කරන්න
+app.UseCors("AllowReactApp");
 
-// Controllers වලට පාර පෙන්නන්න (Map)
+app.UseHttpsRedirection();
 app.MapControllers();
 
-app.Run();
+// --- Database එක හිස් නම්, මුලින්ම Columns ටිකක් හදන්න (Data Seeding) ---
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<KanbanApi.Data.AppDbContext>();
+    
+    // දැනට Columns මුකුත් නැත්නම් විතරක් මේවා දාන්න
+    if (!context.Columns.Any())
+    {
+        context.Columns.Add(new KanbanApi.Models.KanbanColumn { Title = "To Do" });
+        context.Columns.Add(new KanbanApi.Models.KanbanColumn { Title = "In Progress" });
+        context.Columns.Add(new KanbanApi.Models.KanbanColumn { Title = "Done" });
+        context.SaveChanges();
+    }
+}
+// ------------------------------------------------------------------
+
+app.Run(); // මේක තමයි අන්තිම පේළිය
